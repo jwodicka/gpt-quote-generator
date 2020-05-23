@@ -79,7 +79,7 @@ def main(
 
 
     print('Generating quotes')
-    quotes_with_delimiters = gpt2.generate(sess, nsamples=nsamples, return_as_list=True)
+    quotes_with_delimiters = gpt2.generate(sess, run_name=run_name, nsamples=nsamples, return_as_list=True)
     generated_quotes = []
 
     print('Checking for plagiarism')
