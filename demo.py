@@ -28,6 +28,9 @@ def main(
         nsamples: ('Number of generation passes to run', 'option', None, int)=1,
         save_every: ('Save a checkpoint every this many steps', 'option', None, int)=200,
         output_file: ('Name of the csv file to write', 'option')=None,
+        delimiter: ('Character that delimits columns in source', 'option')=',',
+        quote_column: ('Label for the column with quotes', 'option')='quote',
+        attribution_column: ('Label for the column with attributions', 'option')='attrib_name',
     ):
 
     model_directory = 'models' # If we want, we could make this configurable, but there's some
@@ -52,13 +55,13 @@ def main(
     source_quotes = []
     with open(source, newline='') as quote_file:
         with open(temporary_input_file, 'w', newline='') as out_file:
-            quote_reader = csv.DictReader(quote_file)
-            quote_writer = csv.DictWriter(out_file, fieldnames=['quote'], extrasaction='ignore')
+            quote_reader = csv.DictReader(quote_file, delimiter=delimiter)
+            quote_writer = csv.DictWriter(out_file, fieldnames=[quote_column], extrasaction='ignore')
             quote_writer.writeheader() # Loader assumes there will be a header and skips it.
             for row in quote_reader:
                 quote_writer.writerow(row)
-                source_quotes.append(row['quote'])
-                attributions[row['attrib_name']] += 1
+                source_quotes.append(row[quote_column])
+                attributions[row[attribution_column]] += 1
 
     print("Loaded {} quotes attributed to {} sources.".format(len(source_quotes), len(attributions)))
     print("Top 10 sources:")
