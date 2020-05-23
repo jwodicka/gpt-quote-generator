@@ -18,6 +18,7 @@ def main(
         autodownload: ('Automatically download model if needed?', 'flag'),
         finetune: ('Run a fine-tuning pass on the model?', 'flag'),
         resume: ('Resume training from a prior run?', 'flag'),
+        skip_plagiarism: ('Skip checking results for plagiarism?', 'flag'),
 
         # Options
         # There are multiple GPT-2 models that have been released. 124M is the smallest, and it
@@ -105,37 +106,44 @@ def main(
         print("SAMPLE: [" + sample + "]")
         generated_quotes.extend(find_quotes(sample))
 
-    print('Checking for plagiarism')
     results = []
-    for quote in generated_quotes:
-        closest_match = process.extractOne(quote, source_quotes)
-        print("QUOTE: [" + quote + "]")
-        if closest_match[1] >= 90:
-            # This is a bit too close.
-            print("MATCH: [" + closest_match[0] + "]")
-        result = {
-            "quote": quote,
-            "best_match": closest_match[0],
-            "match_score": closest_match[1],
-        }
-        results.append(result)
+    if skip_plagiarism:
+        for quote in generated_quotes:
+            print("QUOTE: [" + quote + "]")
+            results.append({"quote": quote})
+    else:
+        print('Checking for plagiarism')
+        novel_quote_count = 0
+        for quote in generated_quotes:
+            closest_match = process.extractOne(quote, source_quotes)
+            print("QUOTE: [" + quote + "]")
+            if closest_match[1] >= 90:
+                # This is a bit too close.
+                print("MATCH: [" + closest_match[0] + "]")
+            else:
+                novel_quote_count += 1
+            result = {
+                "quote": quote,
+                "best_match": closest_match[0],
+                "match_score": closest_match[1],
+            }
+            results.append(result)
 
-    novel_quote_count = 0
+        print('Novel quotes generated: {} of {} ({:.2%})'.format(novel_quote_count, len(results), novel_quote_count/len(results)))
 
     if output_file == None:
         output_file = run_name + '_' + source
 
+    if skip_plagiarism:
+        fieldnames=['quote']
+    else:
+        fieldnames=['quote', 'best_match', 'match_score']
+
     with open(output_file, 'w', newline='') as out_file:
-        quote_writer = csv.DictWriter(out_file, fieldnames=['quote', 'best_match', 'match_score'])
+        quote_writer = csv.DictWriter(out_file, fieldnames=fieldnames)
         quote_writer.writeheader()
         for row in results:
             quote_writer.writerow(row)
-            # Print the novel ones to console for funsies
-            if row['match_score'] < 90:
-                print(row['quote'])
-                novel_quote_count += 1
-
-    print('Novel quotes generated: {} of {} ({:.2%})'.format(novel_quote_count, len(results), novel_quote_count/len(results)))
 
 if __name__ == '__main__':
     import plac; plac.call(main)
