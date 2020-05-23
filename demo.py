@@ -24,6 +24,7 @@ def main(
         # gives more than adequate results.
         model_name: ('Name of the GPT-2 model to use', 'option')='124M',
         run_name: ('Name to give this run - used for resuming prior runs', 'option')='run1',
+        resume_run_name: ('Name of run to resume - only used when cross-training', 'option')=None,
         steps: ('Number of steps of training to carry out', 'option', None, int)=100,
         nsamples: ('Number of generation passes to run', 'option', None, int)=1,
         save_every: ('Save a checkpoint every this many steps', 'option', None, int)=200,
@@ -37,6 +38,8 @@ def main(
                                # testing involved to make sure we do so consistently everywhere.
     temporary_input_file = 'temp_input.csv' # The file containing cleaned data from the quotes
 
+    if resume_run_name == None:
+        resume_run_name = run_name
 
     print(f"Using model: {model_name}")
 
@@ -70,9 +73,9 @@ def main(
     sess = gpt2.start_tf_sess()
 
     if resume:
-        print(f"Loading run {run_name}")
+        print(f"Loading run {resume_run_name}")
         # If the model name is set, the run name will be ignored.
-        gpt2.load_gpt2(sess, run_name=run_name)
+        gpt2.load_gpt2(sess, run_name=resume_run_name)
 
 
     if finetune:
