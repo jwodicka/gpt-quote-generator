@@ -32,7 +32,7 @@ def main(
         restore_from: ('Checkpoint to resume from', 'option')='latest',
         output_file: ('Name of the csv file to write', 'option')=None,
         delimiter: ('Character that delimits columns in source', 'option')=',',
-        quote_column: ('Label for the column with quotes', 'option')='quote',
+        quote_column: ('Label for the column with quotes', 'option')='quotes',
         attribution_column: ('Label for the column with attributions', 'option')='attrib_name',
     ):
 
