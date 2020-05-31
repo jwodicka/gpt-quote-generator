@@ -34,6 +34,7 @@ def main(
         delimiter: ('Character that delimits columns in source', 'option')=',',
         quote_column: ('Label for the column with quotes', 'option')='quotes',
         attribution_column: ('Label for the column with attributions', 'option')='attrib_name',
+        source_attribution: ('Use only quotes from this source', 'option')=None,
     ):
 
     model_directory = 'models' # If we want, we could make this configurable, but there's some
@@ -55,19 +56,25 @@ def main(
     attributions = Counter()
     # Track all individual quotes so that we can check whether we've regenerated them.
     source_quotes = []
+
+    # TODO: Break this out into a parse phase and a write phase
     with open(source, newline='') as quote_file:
         with open(temporary_input_file, 'w', newline='') as out_file:
             quote_reader = csv.DictReader(quote_file, delimiter=delimiter)
             quote_writer = csv.DictWriter(out_file, fieldnames=[quote_column], extrasaction='ignore')
             quote_writer.writeheader() # Loader assumes there will be a header and skips it.
             for row in quote_reader:
-                quote_writer.writerow(row)
+                if source_attribution == None || row[attribution_column] == source_attribution: 
+                    quote_writer.writerow(row)
                 source_quotes.append(row[quote_column])
                 attributions[row[attribution_column]] += 1
 
     print("Loaded {} quotes attributed to {} sources.".format(len(source_quotes), len(attributions)))
     print("Top 10 sources:")
     print(attributions.most_common(10))
+
+    if source_attribution != None:
+        print ("{} quotes by {}".format(attributions[source_attribution], source_attribution))
 
     sess = gpt2.start_tf_sess()
 
